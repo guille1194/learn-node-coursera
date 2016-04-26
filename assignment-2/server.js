@@ -6,10 +6,12 @@ var Leaderships = require('./models/leaderships')
 var url = 'mongodb://localhost:27017/conFusion'
 mongoose.connect(url)
 var db = mongoose.connection
+var waiting = 0
 
 db.on('error', console.error.bind(console, 'connection error'))
 db.once('open', function () {
   console.log('connected to server')
+  waiting++
   Dishes.create({
     name: 'Uthapizza',
     image: 'test/image.jpg',
@@ -44,12 +46,16 @@ db.once('open', function () {
             console.log('updated comment')
             console.log(dish)
 
-            db.collection('dishes').drop()
+            db.collection('dishes').drop(function () {
+              waiting--
+              closeDb()
+            })
           })
         })
     }, 3000)
   })
 
+  waiting++
   Promotions.create({
     name: 'Pizzapromo',
     image: 'test/promotion.jpg',
@@ -67,10 +73,13 @@ db.once('open', function () {
           if (err) throw err
           console.log('updated promotion')
           console.log(promotion)
+          waiting--
+          closeDb()
         })
     }, 3000)
   })
 
+  waiting++
   Leaderships.create({
     name: 'Mat Jack',
     image: 'test/matjack.jpg',
@@ -81,12 +90,19 @@ db.once('open', function () {
     if (err) throw err
     console.log('leadership created')
     console.log(leadership)
+    waiting--
+    closeDb()
   })
-
-  setTimeout(function () {
-    db.collection('dishes').drop()
-    db.collection('promotions').drop()
-    db.collection('leaderships').drop()
-    db.close()
-  }, 5000)
 })
+
+function closeDb () {
+  if (waiting === 0) {
+    db.collection('dishes').drop(
+      db.collection('promotions').drop(
+        db.collection('leaderships').drop(
+          db.close()
+        )
+      )
+    )
+  }
+}

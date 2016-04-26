@@ -25,6 +25,6 @@ var leadershipSchema = new Schema({
   }
 }, {timestamps: true})
 
-var Leadership = mongoose.model('Leadership', leadershipSchema)
+var Leaderships = mongoose.model('Leadership', leadershipSchema)
 
-module.exports = Leadership
+module.exports = Leaderships
